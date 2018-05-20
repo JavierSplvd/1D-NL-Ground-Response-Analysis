@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.interpolate as interp
 
 
 # Trapezoidal integration of a given array with equal spacing between points.
@@ -12,6 +13,9 @@ def integrate(function, step):
     return integral
 
 
-accel = [x ** 2 for x in np.arange(0, 3.01, 0.01)]
-integral = integrate(accel, 0.01)
-print(integral)
+# Stress interpolation for a given strain. The stress-strain curve is embedded in the function.
+def get_stress(strain):
+    stress_points = [0, 100]
+    strain_points = [0, 1]
+    f = interp.interp1d(strain_points, stress_points)
+    return f(strain)
