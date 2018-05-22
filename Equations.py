@@ -26,11 +26,13 @@ def get_velocity_next_time_step(time_step, width, density, velocity_list, tau_li
                                 rock_velocity):
     # Since the boundary condition of the ground surface is free surface tau_list[0] = 0
     if index == 0:
-        v = velocity_list[i] + time_step / density / width * (tau_list[index + 1])
+        v = velocity_list[index] + time_step / density / width * (tau_list[index + 1])
     # The bottom surface has the same velocity as the rock layer.
     if index == number_elements - 1:
         v = rock_velocity
-    v = velocity_list[i] + time_step / density / width * (tau_list[index + 1] - tau_list[index])
+    else:
+        v = velocity_list[index] + time_step / density / width * (tau_list[index + 1] - tau_list[index])
+    return v
 
 
 def get_strain(velocity_time_history, element_number, time_step, width):
