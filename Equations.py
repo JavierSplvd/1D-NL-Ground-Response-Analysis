@@ -13,12 +13,37 @@ def integrate(function, step):
     return integral
 
 
+# The strain is calculated from the relative displacement and spacing.
+def get_strain(displacement_current, displacement_next, width):
+    strain = (displacement_next - displacement_current) / width
+    strain = abs(strain)
+    return strain
+
+
 # Stress interpolation for a given strain. The stress-strain curve is embedded in the function.
 def get_stress(strain):
     stress_points = [0, 100]
     strain_points = [0, 1]
     f = interp.interp1d(strain_points, stress_points)
-    return f(strain)
+    return float(f(strain))
+
+
+def create_tau_column(velocity_time_history, node_number, time_step, width, rock_displacement):
+    tau_column = []
+    for i in range(node_number):
+        if i == node_number - 1:
+            displacement_next = rock_displacement
+        else:
+            velocity_node_over_time_element_2 = [velocity_column[i + 1] for velocity_column in
+                                                 velocity_time_history]
+            displacement_next = integrate(velocity_node_over_time_element_2, time_step)
+
+        velocity_node_over_time_element_1 = [velocity_column[i] for velocity_column in
+                                             velocity_time_history]
+        displacement_current = integrate(velocity_node_over_time_element_1, time_step)
+        temp_strain = get_strain(displacement_current, displacement_next, width)
+        tau_column.append(get_stress(temp_strain))
+    return tau_column
 
 
 # Solving the differential equation with an explicit finite differences scheme
@@ -33,13 +58,3 @@ def get_velocity_next_time_step(time_step, width, density, velocity_list, tau_li
     else:
         v = velocity_list[index] + time_step / density / width * (tau_list[index + 1] - tau_list[index])
     return v
-
-
-def get_strain(velocity_time_history, element_number, time_step, width):
-    velocity_node_over_time_element_1 = [velocity_column[element_number] for velocity_column in velocity_time_history]
-    velocity_node_over_time_element_2 = [velocity_column[element_number + 1] for velocity_column in
-                                         velocity_time_history]
-    displacement_list_element_1 = integrate(velocity_node_over_time_element_1, time_step)
-    displacement_list_element_2 = integrate(velocity_node_over_time_element_2, time_step)
-    strain = (displacement_list_element_2[-1] - displacement_list_element_1[-1]) / width
-    return strain
